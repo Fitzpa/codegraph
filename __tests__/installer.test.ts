@@ -16,9 +16,11 @@ import {
   writeMcpConfig,
   writePermissions,
   writeClaudeMd,
+  writeAgentsMd,
   hasMcpConfig,
   hasPermissions,
   hasClaudeMdSection,
+  hasAgentsMdSection,
 } from '../src/installer/config-writer';
 
 function createTempDir(): string {
@@ -214,6 +216,36 @@ describe('Installer Config Writer', () => {
       expect(final).toContain('## Next Section');
       expect(final).toContain('Must be preserved');
       expect(final).not.toContain('Old simple content');
+    });
+  });
+
+  describe('writeAgentsMd section replacement', () => {
+    it('should create new AGENTS.md with markers', () => {
+      const result = writeAgentsMd('local');
+
+      expect(result.created).toBe(true);
+      const content = fs.readFileSync(path.join(tempDir, 'AGENTS.md'), 'utf-8');
+      expect(content).toContain('<!-- CODEGRAPH_START -->');
+      expect(content).toContain('<!-- CODEGRAPH_END -->');
+      expect(content).toContain('## CodeGraph');
+      expect(hasAgentsMdSection('local')).toBe(true);
+    });
+
+    it('should replace marked section on update', () => {
+      writeAgentsMd('local');
+
+      const agentsMdPath = path.join(tempDir, 'AGENTS.md');
+      const original = fs.readFileSync(agentsMdPath, 'utf-8');
+      const modified = '# Team Rules\n\nAlways run tests.\n\n' + original + '\n\n## Notes\n\nKeep changelog updated.\n';
+      fs.writeFileSync(agentsMdPath, modified);
+
+      const result = writeAgentsMd('local');
+      expect(result.updated).toBe(true);
+
+      const final = fs.readFileSync(agentsMdPath, 'utf-8');
+      expect(final).toContain('# Team Rules');
+      expect(final).toContain('## Notes');
+      expect(final).toContain('## CodeGraph');
     });
   });
 });
