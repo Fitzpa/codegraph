@@ -111,6 +111,22 @@ All tests used Claude Opus 4.6 (1M context) with Claude Code v2.1.91. Each test 
 
 ## Quick Start
 
+### Install This Fork
+
+```bash
+npm install -g github:Fitzpa/codegraph
+```
+
+If you want to work from a local checkout instead:
+
+```bash
+git clone https://github.com/Fitzpa/codegraph.git
+cd codegraph
+npm install
+npm run build
+npm link
+```
+
 ### 1. Run the Installer
 
 ```bash

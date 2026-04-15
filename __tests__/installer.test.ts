@@ -247,5 +247,30 @@ describe('Installer Config Writer', () => {
       expect(final).toContain('## Notes');
       expect(final).toContain('## CodeGraph');
     });
+
+    it('should replace unmarked section at start of file with CRLF endings', () => {
+      const agentsMdPath = path.join(tempDir, 'AGENTS.md');
+      const original = [
+        '## CodeGraph',
+        '',
+        'Old simple content',
+        '',
+        '## Next Section',
+        '',
+        'Must be preserved',
+        '',
+      ].join('\r\n');
+      fs.writeFileSync(agentsMdPath, original);
+
+      const result = writeAgentsMd('local');
+
+      expect(result.updated).toBe(true);
+
+      const final = fs.readFileSync(agentsMdPath, 'utf-8');
+      expect(final.startsWith('<!-- CODEGRAPH_START -->')).toBe(true);
+      expect(final).toContain('## Next Section');
+      expect(final).toContain('Must be preserved');
+      expect(final).not.toContain('Old simple content');
+    });
   });
 });

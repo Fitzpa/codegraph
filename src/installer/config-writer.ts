@@ -355,24 +355,24 @@ export function writeAgentsMd(location: InstallLocation): { created: boolean; up
     }
   }
 
-  const codegraphHeaderRegex = /\n## CodeGraph\n/;
+  const codegraphHeaderRegex = /(^|\r?\n)(## CodeGraph\r?\n)/;
   const match = content.match(codegraphHeaderRegex);
 
   if (match && match.index !== undefined) {
-    const sectionStart = match.index;
-    const afterSection = content.substring(sectionStart + 1);
-    const nextHeaderMatch = afterSection.match(/\n## (?!#)/);
+    const sectionStart = match.index + match[1].length;
+    const afterSection = content.substring(sectionStart + match[2].length);
+    const nextHeaderMatch = afterSection.match(/\r?\n## (?!#)/);
 
     let sectionEnd: number;
     if (nextHeaderMatch && nextHeaderMatch.index !== undefined) {
-      sectionEnd = sectionStart + 1 + nextHeaderMatch.index;
+      sectionEnd = sectionStart + match[2].length + nextHeaderMatch.index;
     } else {
       sectionEnd = content.length;
     }
 
-    const before = content.substring(0, sectionStart);
+    const before = content.substring(0, match.index);
     const after = content.substring(sectionEnd);
-    content = before + '\n' + AGENTS_MD_TEMPLATE + after;
+    content = before + match[1] + AGENTS_MD_TEMPLATE + after;
     atomicWriteFileSync(agentsMdPath, content);
     return { created: false, updated: true };
   }
