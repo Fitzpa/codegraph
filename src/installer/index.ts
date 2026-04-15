@@ -8,7 +8,7 @@ import { execSync } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 import {
-  writeMcpConfig, writePermissions, writeClaudeMd,
+  writeMcpConfig, writePermissions, writeClaudeMd, writeAgentsMd,
   hasMcpConfig, hasPermissions,
 } from './config-writer';
 
@@ -115,7 +115,7 @@ export async function runInstaller(): Promise<void> {
     );
   }
 
-  clack.outro('Done! Restart Claude Code to use CodeGraph.');
+  clack.outro('Done! Restart your coding assistant (Claude Code, OpenCode, or Warp) to use CodeGraph.');
 }
 
 /**
@@ -149,6 +149,17 @@ function writeConfigs(
     clack.log.success(`Updated ${claudeMdPath}`);
   } else {
     clack.log.success(`Added CodeGraph instructions to ${claudeMdPath}`);
+  }
+
+  // AGENTS.md (OpenCode/Warp and other agent runtimes)
+  const agentsMdResult = writeAgentsMd(location);
+  const agentsMdPath = location === 'global' ? '~/AGENTS.md' : './AGENTS.md';
+  if (agentsMdResult.created) {
+    clack.log.success(`Created ${agentsMdPath}`);
+  } else if (agentsMdResult.updated) {
+    clack.log.success(`Updated ${agentsMdPath}`);
+  } else {
+    clack.log.success(`Added CodeGraph instructions to ${agentsMdPath}`);
   }
 }
 

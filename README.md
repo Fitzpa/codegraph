@@ -2,7 +2,7 @@
 
 # CodeGraph
 
-### Supercharge Claude Code with Semantic Code Intelligence
+### Supercharge Claude Code, OpenCode, and Warp with Semantic Code Intelligence
 
 **94% fewer tool calls · 77% faster exploration · 100% local**
 
@@ -22,7 +22,7 @@
 npx @colbymchenry/codegraph
 ```
 
-<sub>Interactive installer configures Claude Code automatically</sub>
+<sub>Interactive installer configures Claude Code + AGENTS.md-compatible assistants automatically</sub>
 
 </div>
 
@@ -111,6 +111,22 @@ All tests used Claude Opus 4.6 (1M context) with Claude Code v2.1.91. Each test 
 
 ## Quick Start
 
+### Install This Fork
+
+```bash
+npm install -g github:Fitzpa/codegraph
+```
+
+If you want to work from a local checkout instead:
+
+```bash
+git clone https://github.com/Fitzpa/codegraph.git
+cd codegraph
+npm install
+npm run build
+npm link
+```
+
 ### 1. Run the Installer
 
 ```bash
@@ -122,11 +138,12 @@ The installer will:
 - Configure the MCP server in `~/.claude.json`
 - Set up auto-allow permissions for CodeGraph tools
 - Add global instructions to `~/.claude/CLAUDE.md`
+- Add shared agent instructions to `~/AGENTS.md` (used by OpenCode/Warp-style agent runtimes)
 - Optionally initialize your current project
 
-### 2. Restart Claude Code
+### 2. Restart Your Coding Assistant
 
-Restart Claude Code for the MCP server to load.
+Restart your coding assistant (Claude Code, OpenCode, Warp, etc.) for the MCP server/instructions to load.
 
 ### 3. Initialize Projects
 
@@ -135,7 +152,7 @@ cd your-project
 codegraph init -i
 ```
 
-That's it! Claude Code will use CodeGraph tools automatically when a `.codegraph/` directory exists.
+That's it! Claude Code and AGENTS.md-aware assistants will use CodeGraph tools automatically when a `.codegraph/` directory exists.
 
 <details>
 <summary><strong>Manual Setup (Alternative)</strong></summary>

@@ -12,6 +12,11 @@ import {
   CODEGRAPH_SECTION_START,
   CODEGRAPH_SECTION_END,
 } from './claude-md-template';
+import {
+  AGENTS_MD_TEMPLATE,
+  AGENTS_SECTION_START,
+  AGENTS_SECTION_END,
+} from './agents-md-template';
 
 /**
  * Get the path to the Claude config directory
@@ -203,6 +208,18 @@ function getClaudeMdPath(location: InstallLocation): string {
 }
 
 /**
+ * Get the path to AGENTS.md
+ * - Global: ~/AGENTS.md
+ * - Local: ./AGENTS.md
+ */
+function getAgentsMdPath(location: InstallLocation): string {
+  if (location === 'global') {
+    return path.join(os.homedir(), 'AGENTS.md');
+  }
+  return path.join(process.cwd(), 'AGENTS.md');
+}
+
+/**
  * Check if CLAUDE.md has CodeGraph section
  */
 export function hasClaudeMdSection(location: InstallLocation): boolean {
@@ -288,5 +305,79 @@ export function writeClaudeMd(location: InstallLocation): { created: boolean; up
   // No existing section, append to end
   content = content.trimEnd() + '\n\n' + CLAUDE_MD_TEMPLATE + '\n';
   atomicWriteFileSync(claudeMdPath, content);
+  return { created: false, updated: false };
+}
+
+/**
+ * Check if AGENTS.md has CodeGraph section
+ */
+export function hasAgentsMdSection(location: InstallLocation): boolean {
+  const agentsMdPath = getAgentsMdPath(location);
+  try {
+    if (fs.existsSync(agentsMdPath)) {
+      const content = fs.readFileSync(agentsMdPath, 'utf-8');
+      return content.includes(AGENTS_SECTION_START) || content.includes('## CodeGraph');
+    }
+  } catch {
+    // Ignore errors
+  }
+  return false;
+}
+
+/**
+ * Write or update AGENTS.md with CodeGraph instructions
+ */
+export function writeAgentsMd(location: InstallLocation): { created: boolean; updated: boolean } {
+  const agentsMdPath = getAgentsMdPath(location);
+  const dir = path.dirname(agentsMdPath);
+
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  if (!fs.existsSync(agentsMdPath)) {
+    atomicWriteFileSync(agentsMdPath, AGENTS_MD_TEMPLATE + '\n');
+    return { created: true, updated: false };
+  }
+
+  let content = fs.readFileSync(agentsMdPath, 'utf-8');
+
+  if (content.includes(AGENTS_SECTION_START)) {
+    const startIdx = content.indexOf(AGENTS_SECTION_START);
+    const endIdx = content.indexOf(AGENTS_SECTION_END);
+
+    if (endIdx > startIdx) {
+      const before = content.substring(0, startIdx);
+      const after = content.substring(endIdx + AGENTS_SECTION_END.length);
+      content = before + AGENTS_MD_TEMPLATE + after;
+      atomicWriteFileSync(agentsMdPath, content);
+      return { created: false, updated: true };
+    }
+  }
+
+  const codegraphHeaderRegex = /(^|\r?\n)(## CodeGraph\r?\n)/;
+  const match = content.match(codegraphHeaderRegex);
+
+  if (match && match.index !== undefined) {
+    const sectionStart = match.index + match[1].length;
+    const afterSection = content.substring(sectionStart + match[2].length);
+    const nextHeaderMatch = afterSection.match(/\r?\n## (?!#)/);
+
+    let sectionEnd: number;
+    if (nextHeaderMatch && nextHeaderMatch.index !== undefined) {
+      sectionEnd = sectionStart + match[2].length + nextHeaderMatch.index;
+    } else {
+      sectionEnd = content.length;
+    }
+
+    const before = content.substring(0, match.index);
+    const after = content.substring(sectionEnd);
+    content = before + match[1] + AGENTS_MD_TEMPLATE + after;
+    atomicWriteFileSync(agentsMdPath, content);
+    return { created: false, updated: true };
+  }
+
+  content = content.trimEnd() + '\n\n' + AGENTS_MD_TEMPLATE + '\n';
+  atomicWriteFileSync(agentsMdPath, content);
   return { created: false, updated: false };
 }
